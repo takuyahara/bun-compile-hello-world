@@ -1,0 +1,27 @@
+name: build-macos
+
+on:
+  push:
+    tags:
+      - "*.*.*"
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          curl -fsSL https://bun.sh/install | bash
+          mkdir dist
+          ~/.bun/bin/bun build src/main.ts --compile --outfile macos
+          mv macos dist
+          cd dist
+          zip macos.zip macos
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: dist/macos.zip
